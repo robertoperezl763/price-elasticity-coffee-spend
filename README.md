@@ -41,4 +41,5 @@ Female customers represent a **high-value customer demographic** - suggesting a 
 
 ## Author
 Created by Roberto Perez Lopez
+
 [LinkedIn](https://www.linkedin.com/in/roberto-perezl/) | [GitHub](https://github.com/robertoperezl763/) | Email(mailto:robertoperezl761@gmail.com)
