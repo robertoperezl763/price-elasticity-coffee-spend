@@ -1,0 +1,322 @@
+---
+# title: "MAST 6251 - Applied Predictive Analytics - HW2"
+# author: "Roberto Perez Lopez"
+# date: "2024-02-12"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+# fontsize: 1pt
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,fig.width = 5, fig.height = 3, fig.align='center')
+```
+
+
+<!-- Page Header -->
+## MAST 6251 - Applied Predictive Analyticst - HW2 - Roberto Perez Lopez
+###  Simple Elasticity Regression
+
+```{r include=FALSE, warning= FALSE}
+library(tidyverse)
+library(knitr)
+# library(kableExtra)
+
+starbucks_transactions <- read.csv('../data/sbux_transaction.txt',sep=' ')
+survey <- read.csv('../data/sbux_survey.txt', sep=' ')
+
+#change female to factor
+survey <- survey %>% mutate(female = factor(female))
+starbucks_transactions <- starbucks_transactions %>% mutate(female = factor(female))
+
+#merging both datasets
+joined <- left_join(starbucks_transactions, survey %>% select(id,enroll), by='id')
+ 
+  
+  
+loglog <-  lm(log(monthlySpend) ~ log(avgPrice) + female + age, data = joined,
+              subset = enroll == 1)
+outloglog <- summary(loglog)  
+
+coeff <- data.frame(outloglog$coefficients) %>% select(Estimate)
+avgp <- round(coeff$Estimate[2],3)
+
+female <- round(coeff$Estimate[3],3)
+femaleExp <- round(exp(female),3)
+age <- round(coeff$Estimate[4],3)
+ageExp <- round(exp(age),3)
+
+```
+
+The results of a log-log regression shows that for every $1\%$ increase in price of a drink, there will be approximately a $`r -avgp`\%$ decrease in monthly spend. The model also shows an expected increase of about $`r femaleExp * 100`\%$ in monthly spend for female customers relative to a male customer, since $exp(`r female`) = `r femaleExp`$. We can also see that for every year of age, the monthly spend increases about $`r (ageExp-1)*100`\%$, since $exp(`r age`) = `r ageExp`$.
+
+```{r echo=FALSE}
+
+outloglog$coefficients %>% round(3) %>% kable() #%>% kable_styling(font_size = 10)
+
+
+```
+
+
+```{r include=FALSE, message=FALSE}
+fs <- glm(enroll ~ age + female + enrollPromoValue,data=joined,family = binomial(link = "probit"))
+yhat = predict(fs)
+joined$imr <- dnorm(yhat)/pnorm(yhat)
+
+ss <- lm(log(monthlySpend) ~ age + female + log(avgPrice) + imr, data=joined, subset = enroll==1)
+outss <- summary(ss)
+
+heckitCoef <- data.frame(outss$coefficients) %>%  select(Estimate) 
+
+hAvgp <- round(heckitCoef$Estimate[4],3)
+hFemale <- round(heckitCoef$Estimate[3],3)
+hAge <- round(heckitCoef$Estimate[2],3)
+
+hFemaleExp <- round(exp(hFemale),3)
+hAgeExp <- round(exp(hAge),3)
+
+```
+
+
+
+
+### Heckman Two-step estimator
+Running a Heckman two-step estimator using survey data to predict the probability of enrolling (using the Enrollment Promotional value as the variable that influences probability of joining the rewards program) shows some underlying bias in the original model. With the coefficients adjusted for self-selection bias in the data, we can interpret the coefficients as follows (holding all other variables constant): For every $1\%$ increase in the price of a drink, there will be approximately a $`r -hAvgp`\%$ decrease in monthly spend, There is also an expected $`r hFemaleExp*100`\%$ increase in monthly spend for female customers relative to a male customer ( $exp(`r hFemale`) = `r hFemaleExp`$ ), and an expected monthly spend increase of $`r (hAgeExp-1)*100`\%$ ($exp(`r hAge`) = `r hAgeExp`$).
+
+```{r echo=FALSE}
+
+
+outss$coefficients %>% round(3) %>% kable() #|> kable_styling(font_size = 10)
+
+
+```
+
+### Selection Bias in the Data
+Comparing the previous two models we can see signs of selection bias in our data set. The overall price elasticity has increased by about $`r (avgp - hAvgp)`\%$ showing that the actual price elasticity is actually greater than we originally thought. Holding the age, and enroll Promotion at a set value, we can visualize this price elasticity in the graph below.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+testFemale <- data.frame(avgPrice = runif(1000,min = min(joined$avgPrice),max = max(joined$avgPrice)),
+                       age= round(mean(joined$age),digits = 0),
+                       female = factor(1),
+                       enrollPromoValue = round(mean(joined$enrollPromoValue), digits = 0)
+                       )
+tYhat <- predict(fs,newdata = testFemale, type = 'response')
+testFemale$imr <- dnorm(tYhat)/pnorm(tYhat)
+
+testFemale$predictions <- predict(ss, newdata = testFemale) 
+
+# femalePred <- testFemale %>% 
+#   ggplot(aes(avgPrice, exp(predictions))) + geom_smooth() + labs(y= "Predicted Monthly Spend")
+
+
+
+
+
+testMale <- data.frame(avgPrice = testFemale %>% select(avgPrice),
+                       age= round(mean(joined$age),digits = 0),
+                       female = factor(0),
+                       enrollPromoValue = round(mean(joined$enrollPromoValue), digits = 0)
+                       )
+tYhat <- predict(fs,newdata = testMale, type = 'response')
+testMale$imr <- dnorm(tYhat)/pnorm(tYhat)
+testMale$predictions <- predict(ss, newdata = testMale) 
+
+# malePred <- testMale %>% 
+#   ggplot(aes(avgPrice, exp(predictions))) + geom_smooth() + labs(y= "Predicted Monthly Spend")
+
+#grid.arrange(femalePred,malePred, ncol=2)
+
+combinedTestData <- union_all(testFemale, testMale)
+
+
+
+
+# 
+# maleFemaleChart + scale_y_continuous(breaks=seq(0,200,25)) +
+#   geom_point(aes(x= 5.65, y= exp(3.505239)))
+
+
+
+combinedTestData %>%
+  ggplot(aes(avgPrice,exp(predictions))) +
+  geom_smooth(se = FALSE, linetype= female, ) +
+  labs(y="Predicted Monthly Spend",
+       x= "Average Latte Price",
+       title = "Predicted Monthly Spend Based on Average Latte Price")+
+  scale_y_continuous(breaks = seq(0,200,10)) + scale_x_continuous(breaks = seq(2,10,1)) +
+  theme_grey()+ 
+  theme(plot.title = element_text(hjust = 0.5))
+
+# 
+# combinedTestData |> 
+#   ggplot(aes(avgPrice, exp(predictions))) +
+#   geom_smooth()
+
+
+
+# testFemale %>% 
+#   ggplot(aes(avgPrice, exp(predictions), color = female)) +
+#   geom_smooth(color= "red", aes(color= "Female")) +
+#   labs(y="Predicted Monthly Spend") +
+#   geom_smooth(data= testMale,
+#               color="blue",
+#               aes(color= "Male")) +
+#   scale_color_identity(labels = c("Female","Male")) +
+#   guides(color= guide_legend(title = "Gender"))
+  
+
+```
+
+We can see a large drop in the predicted spend for prices of \$2.5 to around \$5 with a less steep decrease from \$5 to \$9. If we could reduce the average price of a latte, we can see a jump in demand. The current average latte price is about \$6 on average, we can see in the graph that the predicted monthly spend for that price point is about \$17. Decreasing this average price closer to \$5 leads to a predicted monthly spend of approximately \$25. This decrease of \$1 would lead to approximately an \$8 increase in customer monthly spend. Assuming that Starbucks will see around 400 million customers a month (between our 38,000 global stores), an average of \$8 increase in monthly spend per customer would equal around \$3.2 Billion in sales globally per month.
+
+We can drill this down even further by looking at the predicted monthly spend by price and gender. This shows that female customers are most likely to spend more on a monthly basis than male customers. We could also determine this by looking at the model coefficients; however, by graphing this against the Average latte price, we can see that at the lowest average price of \$2, female customers are predicted to spend approximately 7.2x more than male customers. Based on these predictions there is a lot more value to be found from marketing to our female customer demographic when compared to the male demographic.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.width = 5, fig.height = 3}
+maleFemaleChart <- combinedTestData %>% 
+  ggplot(aes(avgPrice,exp(predictions),color=female)) +
+  geom_smooth(se = FALSE, linetype= female, ) + 
+  labs(y="Predicted Monthly Spend",
+       x= "Average Latte Price",
+       title= "Price Elasticity by Gender",
+       color = "Gender")+
+  scale_color_manual(values = c("green","black"), labels= c("Female","Male"))+
+  scale_linetype_manual(values = c("Male" = "solid", "Female" = "dashed"))+
+  scale_y_continuous(breaks=seq(0,200,20)) +
+  scale_x_continuous(breaks = seq(0,10,1))
+
+maleFemaleChart +theme(plot.title = element_text(hjust = 0.5))
+
+# combinedTestData %>%
+#   ggplot(aes(log(avgPrice),predictions,color=female)) +
+#   geom_smooth(se = FALSE, linetype= female, ) +
+#   labs(y="Predicted Monthly Spend",
+#        x= "Average Latte Price",
+#        title= "Price Elasticity by Gender",
+#        color = "Gender")+
+#   scale_color_manual(values = c("red","blue"), labels= c("Female","Male"))+
+#   scale_linetype_manual(values = c("Male" = "solid", "Female" = "dashed"))
+
+```
+
+
+```{r include=FALSE}
+
+newT <- data.frame(avgPrice = c(4,4.5,5,5.65,6,6.5,7,7.5,8),
+                   age= round(mean(joined$age),0),
+                   female= factor(1),
+                   enrollPromoValue = round(mean(joined$enrollPromoValue),0)
+                   )
+
+tYhat <- predict(fs, newdata = newT,type = 'response' )
+
+newT$imr <- dnorm(tYhat)/pnorm(tYhat)
+newT$predictions <- predict(ss, newdata = newT) 
+
+newT |> 
+  ggplot(aes(avgPrice, exp(predictions), color= female))+
+  geom_smooth()+
+  geom_point(color="black")
+```
+
+
+
+
+```{r include=FALSE,echo=FALSE, warning=FALSE, message=FALSE}
+#runif(1000,min = min(joined$avgPrice),max = max(joined$avgPrice))
+
+testFemale <- data.frame(avgPrice = round(mean(joined$avgPrice),2),
+                       age= round(runif(1000, min= min(joined$age), max= max(joined$age)),0),
+                       female = factor(1),
+                       enrollPromoValue = round(mean(joined$enrollPromoValue), digits = 0)
+                       )
+tYhat <- predict(fs,newdata = testFemale, type = 'response')
+testFemale$imr <- dnorm(tYhat)/pnorm(tYhat)
+
+testFemale$predictions <- predict(ss, newdata = testFemale) 
+
+
+
+
+testMale <- data.frame(avgPrice = round(mean(joined$avgPrice),2),
+                       age= round(runif(1000, min= min(joined$age), max= max(joined$age)),0),
+                       female = factor(0),
+                       enrollPromoValue = round(mean(joined$enrollPromoValue), digits = 0)
+                       )
+tYhat <- predict(fs,newdata = testMale, type = 'response')
+testMale$imr <- dnorm(tYhat)/pnorm(tYhat)
+testMale$predictions <- predict(ss, newdata = testMale) 
+
+combinedTestData <- union_all(testFemale, testMale)
+
+combinedTestData |> 
+  ggplot(aes(age,exp(predictions), color= female)) +
+  geom_smooth()
+
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, include=FALSE}
+
+testFemale <- data.frame(avgPrice = runif(1000,min = min(joined$avgPrice),max = max(joined$avgPrice)),
+                       age= c(runif(333,20,20),runif(333,35,35),runif(334,50,50)), #runif(250, 40,40), runif(250, 50,50)),
+                       female = factor(1),
+                       enrollPromoValue = round(mean(joined$enrollPromoValue), digits = 0)
+                       )
+tYhat <- predict(fs,newdata = testFemale, type = 'response')
+testFemale$imr <- dnorm(tYhat)/pnorm(tYhat)
+
+testFemale$predictions <- predict(ss, newdata = testFemale) 
+
+
+
+testMale <- data.frame(avgPrice = testFemale %>% select(avgPrice),
+                       age= testFemale |> select(age),
+                       female = factor(0),
+                       enrollPromoValue = round(mean(joined$enrollPromoValue), digits = 0)
+                       )
+tYhat <- predict(fs,newdata = testMale, type = 'response')
+testMale$imr <- dnorm(tYhat)/pnorm(tYhat)
+testMale$predictions <- predict(ss, newdata = testMale) 
+
+
+combinedTestData <- union_all(testFemale, testMale)
+
+combinedTestData |> 
+  ggplot(aes(avgPrice,exp(predictions), color= female)) +
+  geom_smooth() +
+  facet_wrap(~age)
+
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, include=FALSE}
+
+testFemale <- data.frame(avgPrice = runif(1000,min = min(joined$avgPrice),max = max(joined$avgPrice)),
+                       age= round(mean(joined$age),0),
+                       female = factor(1),
+                       enrollPromoValue = round(runif(1000,min = 0,max = 7))
+                       )
+tYhat <- predict(fs,newdata = testFemale, type = 'response')
+testFemale$imr <- dnorm(tYhat)/pnorm(tYhat)
+
+testFemale$predictions <- predict(ss, newdata = testFemale) 
+
+
+
+testMale <- data.frame(avgPrice = testFemale %>% select(avgPrice),
+                       age= testFemale |> select(age),
+                       female = factor(0),
+                       enrollPromoValue = testFemale |> select(enrollPromoValue)
+                       )
+tYhat <- predict(fs,newdata = testMale, type = 'response')
+testMale$imr <- dnorm(tYhat)/pnorm(tYhat)
+testMale$predictions <- predict(ss, newdata = testMale) 
+
+
+combinedTestData <- union_all(testFemale, testMale)
+
+combinedTestData |> 
+  ggplot(aes(avgPrice,exp(predictions), color= female)) +
+  geom_smooth() +
+  facet_wrap(~enrollPromoValue)
+
+```

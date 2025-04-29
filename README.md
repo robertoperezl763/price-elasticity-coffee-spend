@@ -39,6 +39,13 @@ Female customers represent a **high-value customer demographic** - suggesting a 
 - Incorporate regional pricing variation
 - Simulate pricing strategies under specific constraints (e.g., cost, competition)
 
+---
+
+## 📌 Disclaimer
+
+This dataset is **simulated** and was provided as part of a university course project. It does **not** contain real customer data, and any resemblance to real individuals or businesses is purely coincidental. The data is being used solely for educational and demonstration purposes.
+
+
 ## 👤  Author
 Created by Roberto Perez Lopez\
 [LinkedIn](https://www.linkedin.com/in/roberto-perezl/) | [GitHub](https://github.com/robertoperezl763/) | [Email](mailto:robertoperezl761@gmail.com)
