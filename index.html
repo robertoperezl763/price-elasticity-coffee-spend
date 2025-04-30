@@ -3,17 +3,25 @@
 <head>
   <meta charset="UTF=8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  
+  <title>Price Elasticity Coffee Spend</title>
 </head>
 <body>
   <h1 class="code-line" data-line-start=0 data-line-end=1 ><a id="_Price_Elasticity_and_Customer_Spend_Modeling_for_a_Coffee_Chain_0"></a>☕️ Price Elasticity and Customer Spend Modeling for a Coffee Chain</h1>
+  <h4>
+    <a href="./report/price_elasticity_coffee.html">View Report (HTML)</a>
+    <a href="./report/price_elasticity_coffee.pdf">View Report (PDF)</a>
+  </h4>
 <h2 class="code-line" data-line-start=2 data-line-end=3 ><a id="_Problem_Statement_2"></a>📌 Problem Statement:</h2>
-<p class="has-line-data" data-line-start="3" data-line-end="5">What factors infleunce how much consumers spend each mont? How sensitive are customers to changes in pricing?<br>
-Are we missing insights by only looking at the customers who entroll?</p>
+  <ul>
+    <li>What factors influence how much consumers spend each month?</li>
+    <li>How sensitive are customers to changes in pricing?</li>
+    <li>Are we missing insights by only looking at the customers who enroll?</li>
+  </ul>
+</p>
 <hr>
-<h2 class="code-line" data-line-start=8 data-line-end=9 ><a id="__Tehcniques_Used_8"></a>🔍  Tehcniques Used</h2>
+<h2 class="code-line" data-line-start=8 data-line-end=9 ><a id="__Tehcniques_Used_8"></a>🔍  Techniques Used</h2>
 <ul>
-<li class="has-line-data" data-line-start="9" data-line-end="10"><strong>Log-log regression</strong> (elasicity modeling)</li>
+<li class="has-line-data" data-line-start="9" data-line-end="10"><strong>Log-log regression</strong> (elasticity modeling)</li>
 <li class="has-line-data" data-line-start="10" data-line-end="11"><strong>Heckman 2-step regression</strong> (to correct for selection bias in data)</li>
 <li class="has-line-data" data-line-start="11" data-line-end="12"><strong>Exploratory Data Analysis</strong> and <strong>Data Visualization</strong></li>
 <li class="has-line-data" data-line-start="12" data-line-end="14"><strong>Business impact analysis</strong> based on model predictions</li>
@@ -23,20 +31,42 @@ Are we missing insights by only looking at the customers who entroll?</p>
 <ul>
 <li class="has-line-data" data-line-start="17" data-line-end="18">A <strong>1% increase</strong> in average drink price leads to a <strong>1.775% decrease</strong> in spend</li>
 <li class="has-line-data" data-line-start="18" data-line-end="19"><strong>Female customers</strong> spend <strong>~7x more</strong> per month than male customers</li>
-<li class="has-line-data" data-line-start="19" data-line-end="20">Each additional <strong>year of age</strong> leads to <strong>~1.01%</strong> increase to customer monthly spend</li>
-<li class="has-line-data" data-line-start="20" data-line-end="22">Correcting for selection bias in data reveealed that the <strong>price sensitivity</strong> was hihger than initially estimated</li>
+<li class="has-line-data" data-line-start="19" data-line-end="20">Each additional <strong>year of age</strong> leads to <strong>~1.01%</strong> increase in customer monthly spend</li>
+<li class="has-line-data" data-line-start="20" data-line-end="22">Correcting for selection bias in data revealed that the <strong>price sensitivity</strong> was higher than initially estimated</li>
 </ul>
 <hr>
 <h2 class="code-line" data-line-start=24 data-line-end=25 ><a id="__Business_Impact_24"></a>💡  Business Impact</h2>
-<p class="has-line-data" data-line-start="25" data-line-end="27">Reducing average drink prices from the current average of <strong>$6 to $5</strong> could generate an estimated <strong>$3.2 billion</strong> in extra global revenue per month<br>
-Female customers represent a <strong>high-value customer demographic</strong> - suggesting a <em>targeted marketing opportunity</em></p>
+<p class="has-line-data" data-line-start="25" data-line-end="27">Reducing average drink prices from the current average of <strong>$6 to $5</strong> could generate an estimated <strong>$3.2 billion</strong> in extra global revenue per month.<br>
+Female customers represent a <strong>high-value customer demographic</strong> - suggesting a <em>targeted marketing opportunity</em>.</p>
 <hr>
 <h2 class="code-line" data-line-start=30 data-line-end=31 ><a id="__Repo_Structure_30"></a>📂  Repo Structure</h2>
 <ul>
-<li class="has-line-data" data-line-start="31" data-line-end="32">code file</li>
-<li class="has-line-data" data-line-start="32" data-line-end="33">data/</li>
-<li class="has-line-data" data-line-start="33" data-line-end="34">visuals/</li>
-<li class="has-line-data" data-line-start="34" data-line-end="36">report.pdf</li>
+<li class="has-line-data" data-line-start="31" data-line-end="32"><code>README.md</code></li>
+<li class="has-line-data" data-line-start="32" data-line-end="34">📁 <a href="https://github.com/robertoperezl763/price-elasticity-coffee-spend/tree/main/data"><strong>data/</strong></a>
+<ul>
+<li class="has-line-data" data-line-start="33" data-line-end="34"><code>README_data.md</code></li>
+</ul>
+</li>
+<li class="has-line-data" data-line-start="34" data-line-end="36">📁 <a href="https://github.com/robertoperezl763/price-elasticity-coffee-spend/tree/main/workfile"><strong>workfile/</strong></a>
+<ul>
+<li class="has-line-data" data-line-start="35" data-line-end="36"><code>price_elasticity_coffee.Rmd</code></li>
+</ul>
+</li>
+<li class="has-line-data" data-line-start="36" data-line-end="41">📁 <a href="https://github.com/robertoperezl763/price-elasticity-coffee-spend/tree/main/visuals"><strong>visuals/</strong></a>
+<ul>
+<li class="has-line-data" data-line-start="37" data-line-end="38"><code>loglog_model.png</code></li>
+<li class="has-line-data" data-line-start="38" data-line-end="39"><code>heckmanTwoStep_model.png</code></li>
+<li class="has-line-data" data-line-start="39" data-line-end="40"><code>maleVFemale_plot.png</code></li>
+<li class="has-line-data" data-line-start="40" data-line-end="41"><code>predictedMonthlySpend_plot.png</code></li>
+</ul>
+</li>
+<li class="has-line-data" data-line-start="41" data-line-end="44">📁 <a href="https://github.com/robertoperezl763/price-elasticity-coffee-spend/tree/main/report"><strong>report/</strong></a>
+<ul>
+<li class="has-line-data" data-line-start="42" data-line-end="43"><code>price_elasticity_coffee.pdf</code></li>
+<li class="has-line-data" data-line-start="43" data-line-end="44"><code>price_elasticity_coffee.html</code></li>
+</ul>
+</li>
+<li class="has-line-data" data-line-start="44" data-line-end="45"><code>.gitignore</code></li>
 </ul>
 <h2 class="code-line" data-line-start=36 data-line-end=37 ><a id="__Possible_Next_Steps_36"></a>🧭  Possible Next Steps</h2>
 <ul>
