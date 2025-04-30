@@ -29,10 +29,22 @@ Female customers represent a **high-value customer demographic** - suggesting a 
 ---
 
 ## 📂  Repo Structure
-- code file
-- data/
-- visuals/
-- report.pdf
+📁 coffee-pricing-elasticity/
+├── README.md
+├── 📁 [data](https://github.com/robertoperezl763/price-elasticity-coffee-spend/tree/main/data)/
+│   └── README_data.md
+├── 📁 [workfile](https://github.com/robertoperezl763/price-elasticity-coffee-spend/tree/main/workfile)/
+│   └── price_elasticity_coffee.Rmd
+├── 📁 [visuals](https://github.com/robertoperezl763/price-elasticity-coffee-spend/tree/main/visuals)/
+│   ├── loglog_model.png
+│   └── heckmanTwoStep_model.png
+│   └── maleVFemale_plot.png
+│   └── predictedMonthlySpend_plot.png
+├── 📁 [report](https://github.com/robertoperezl763/price-elasticity-coffee-spend/tree/main/report)/
+│   └── price_elasticity_coffee.pdf
+│   └── price_elasticity_coffee.html
+└── .gitignore
+
 
 ## 🧭  Possible Next Steps
 - Explore time series trends (e.g., monthly seasonality)
