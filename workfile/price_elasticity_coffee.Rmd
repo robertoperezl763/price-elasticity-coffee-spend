@@ -3,9 +3,9 @@
 # author: "Roberto Perez Lopez"
 # date: "2024-02-12"
 output:
+  pdf_document: default
   html_document:
     df_print: paged
-  pdf_document: default
 # fontsize: 1pt
 ---
 
@@ -15,16 +15,23 @@ knitr::opts_chunk$set(echo = TRUE,fig.width = 5, fig.height = 3, fig.align='cent
 
 
 <!-- Page Header -->
-## MAST 6251 - Applied Predictive Analyticst - HW2 - Roberto Perez Lopez
+## Price Elasticity and Customer Spend Modeling for a Coffee Chain
+Report by: Roberto Perez Lopez
+
+### Overview
+This report estimates price sensitivity for Starbucks' lattes among its customers. However, due to limitations in data collection, we only observe spending behavior for customers who voluntarily enrolled in the rewards program (with an average enrollment rate of $36.4\%$). Because enrollment is self-selected, there is a risk of selection bias; responsiveness to a change in price may differ between customers who choose to enroll and those who opt out of the program.
+To address this, the study presents separate models that adjust for self-selection bias, and provide a more accurate estimate of price sensitivity for the overall customer base. The analysis also offers actionable business recommendations based on these findings.
+
+
 ###  Simple Elasticity Regression
 
 ```{r include=FALSE, warning= FALSE}
 library(tidyverse)
 library(knitr)
-# library(kableExtra)
+#library(kableExtra)
 
-starbucks_transactions <- read.csv('../data/sbux_transaction.txt',sep=' ')
-survey <- read.csv('../data/sbux_survey.txt', sep=' ')
+starbucks_transactions <- read.csv('../dataFiles/sbux_transaction.txt',sep=' ')
+survey <- read.csv('../dataFiles/sbux_survey.txt', sep=' ')
 
 #change female to factor
 survey <- survey %>% mutate(female = factor(female))
@@ -52,8 +59,18 @@ ageExp <- round(exp(age),3)
 The results of a log-log regression shows that for every $1\%$ increase in price of a drink, there will be approximately a $`r -avgp`\%$ decrease in monthly spend. The model also shows an expected increase of about $`r femaleExp * 100`\%$ in monthly spend for female customers relative to a male customer, since $exp(`r female`) = `r femaleExp`$. We can also see that for every year of age, the monthly spend increases about $`r (ageExp-1)*100`\%$, since $exp(`r age`) = `r ageExp`$.
 
 ```{r echo=FALSE}
+#output for html/pdf knit file
+model_table <-outloglog$coefficients %>% round(3)
+kable(model_table, booktabs = TRUE, caption = 'Log-Log Regression Model Results')
+# kable() #%>% kable_styling(font_size = 10)
+```
 
-outloglog$coefficients %>% round(3) %>% kable() #%>% kable_styling(font_size = 10)
+
+```{r include=FALSE, message=FALSE}
+##########used for exporting Table###########
+# library(kableExtra)
+# kable(model_table, format = "html", caption = '<div style="text-align: center;"><b>Table 1: Log-Log Regression Model Results</b></div>') %>%  kable_styling(full_width = FALSE, position = "center") %>% save_kable('../visuals/loglogModel.png')
+
 
 
 ```
@@ -87,7 +104,19 @@ Running a Heckman two-step estimator using survey data to predict the probabilit
 ```{r echo=FALSE}
 
 
-outss$coefficients %>% round(3) %>% kable() #|> kable_styling(font_size = 10)
+# outss$coefficients %>% round(3) %>% kable() #|> kable_styling(font_size = 10)
+
+#output for html/pdf knit file
+heckman_model_table <-outss$coefficients %>% round(3) 
+kable(heckman_model_table, booktabs = TRUE, caption = 'Heckman Two-step Regression Model Results')
+# kable() #%>% kable_styling(font_size = 10)
+
+```
+
+```{r include=FALSE, message=FALSE}
+##########used for exporting Table###########
+# library(kableExtra)
+# kable(heckman_model_table, format = "html", caption = '<div style="text-align: center;"><b>Table 2: Heckman Two-step Regression Model Results</b></div>') %>%  kable_styling(full_width = FALSE, position = "center") %>% save_kable('../visuals/heckmanTwoStep_model.png')
 
 
 ```
@@ -95,7 +124,7 @@ outss$coefficients %>% round(3) %>% kable() #|> kable_styling(font_size = 10)
 ### Selection Bias in the Data
 Comparing the previous two models we can see signs of selection bias in our data set. The overall price elasticity has increased by about $`r (avgp - hAvgp)`\%$ showing that the actual price elasticity is actually greater than we originally thought. Holding the age, and enroll Promotion at a set value, we can visualize this price elasticity in the graph below.
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.width = 4, fig.height= 2.5, fig.align='center'}
 testFemale <- data.frame(avgPrice = runif(1000,min = min(joined$avgPrice),max = max(joined$avgPrice)),
                        age= round(mean(joined$age),digits = 0),
                        female = factor(1),
@@ -138,7 +167,7 @@ combinedTestData <- union_all(testFemale, testMale)
 
 
 
-combinedTestData %>%
+predMonthlySpend <-combinedTestData %>%
   ggplot(aes(avgPrice,exp(predictions))) +
   geom_smooth(se = FALSE, linetype= female, ) +
   labs(y="Predicted Monthly Spend",
@@ -148,23 +177,12 @@ combinedTestData %>%
   theme_grey()+ 
   theme(plot.title = element_text(hjust = 0.5))
 
-# 
-# combinedTestData |> 
-#   ggplot(aes(avgPrice, exp(predictions))) +
-#   geom_smooth()
+#display plot on knit file
+predMonthlySpend
 
+#export png version of plot
 
-
-# testFemale %>% 
-#   ggplot(aes(avgPrice, exp(predictions), color = female)) +
-#   geom_smooth(color= "red", aes(color= "Female")) +
-#   labs(y="Predicted Monthly Spend") +
-#   geom_smooth(data= testMale,
-#               color="blue",
-#               aes(color= "Male")) +
-#   scale_color_identity(labels = c("Female","Male")) +
-#   guides(color= guide_legend(title = "Gender"))
-  
+# ggsave("../visuals/predictedMonthlySpend_plot.png", plot = predMonthlySpend, width = 12, height = 10, dpi = 300)
 
 ```
 
@@ -172,7 +190,7 @@ We can see a large drop in the predicted spend for prices of \$2.5 to around \$5
 
 We can drill this down even further by looking at the predicted monthly spend by price and gender. This shows that female customers are most likely to spend more on a monthly basis than male customers. We could also determine this by looking at the model coefficients; however, by graphing this against the Average latte price, we can see that at the lowest average price of \$2, female customers are predicted to spend approximately 7.2x more than male customers. Based on these predictions there is a lot more value to be found from marketing to our female customer demographic when compared to the male demographic.
 
-```{r echo=FALSE, message=FALSE, warning=FALSE, fig.width = 5, fig.height = 3}
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.width = 4, fig.height = 2.5, fig.align='center'}
 maleFemaleChart <- combinedTestData %>% 
   ggplot(aes(avgPrice,exp(predictions),color=female)) +
   geom_smooth(se = FALSE, linetype= female, ) + 
@@ -183,19 +201,15 @@ maleFemaleChart <- combinedTestData %>%
   scale_color_manual(values = c("green","black"), labels= c("Female","Male"))+
   scale_linetype_manual(values = c("Male" = "solid", "Female" = "dashed"))+
   scale_y_continuous(breaks=seq(0,200,20)) +
-  scale_x_continuous(breaks = seq(0,10,1))
+  scale_x_continuous(breaks = seq(0,10,1)) +
+  theme(plot.title = element_text(hjust = 0.5))
 
-maleFemaleChart +theme(plot.title = element_text(hjust = 0.5))
+#display on knit file
+maleFemaleChart
 
-# combinedTestData %>%
-#   ggplot(aes(log(avgPrice),predictions,color=female)) +
-#   geom_smooth(se = FALSE, linetype= female, ) +
-#   labs(y="Predicted Monthly Spend",
-#        x= "Average Latte Price",
-#        title= "Price Elasticity by Gender",
-#        color = "Gender")+
-#   scale_color_manual(values = c("red","blue"), labels= c("Female","Male"))+
-#   scale_linetype_manual(values = c("Male" = "solid", "Female" = "dashed"))
+
+#export plot as png
+#ggsave("../visuals/maleVFemale_plot.png", plot = maleFemaleChart, width = 12, height = 10, dpi = 300)
 
 ```
 
